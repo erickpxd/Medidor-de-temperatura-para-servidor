@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "author": "IoT Environmental Monitoring",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-esp32-devkit-v1",
+      "id": "esp32",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht22",
+      "top": -18,
+      "left": 260,
+      "attrs": { "temperature": "30", "humidity": "60" }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 170,
+      "left": 275,
+      "attrs": { "volume": "0.1" }
+    }
+  ],
+  "connections": [
+    [ "dht22:VCC", "esp32:3V3", "red", [ "v0" ] ],
+    [ "dht22:SDA", "esp32:D15", "green", [ "v0" ] ],
+    [ "dht22:GND", "esp32:GND.1", "black", [ "v0" ] ],
+    [ "buzzer:1", "esp32:D14", "orange", [ "v0" ] ],
+    [ "buzzer:2", "esp32:GND.2", "black", [ "v0" ] ]
+  ],
+  "dependencies": {}
+}
