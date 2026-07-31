@@ -1,0 +1,22 @@
+{
+  "name": "iot-monitoring-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MQTT consumer for the IoT Environmental Monitoring project",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test",
+    "check": "node --check src/index.js"
+  },
+  "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
+    "dotenv": "^16.4.7",
+    "mqtt": "^5.10.4",
+    "nodemailer": "^9.0.5"
+  }
+}
