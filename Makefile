@@ -1,4 +1,4 @@
-.PHONY: up down logs test validate normal temperature humidity both recovery
+.PHONY: up down logs test validate seed simulate normal temperature humidity both recovery
 
 up:
 	docker compose up -d --build
@@ -16,16 +16,22 @@ validate:
 	docker compose config --quiet
 	cd backend && npm run check && npm test
 
+seed:
+	docker compose exec -T backend npm run seed
+
+simulate:
+	docker compose exec -T backend npm run simulate-alert
+
 normal:
-	docker compose exec mosquitto mosquitto_pub -h localhost -t iot/monitoring/esp32-01/vitals -m '{"deviceId":"esp32-01","temperature":30,"humidity":60,"temperatureAlert":false,"humidityAlert":false,"alert":false}'
+	docker compose exec -T backend npm run simulate -- normal
 
 temperature:
-	docker compose exec mosquitto mosquitto_pub -h localhost -t iot/monitoring/esp32-01/vitals -m '{"deviceId":"esp32-01","temperature":38,"humidity":60,"temperatureAlert":true,"humidityAlert":false,"alert":true}'
+	docker compose exec -T backend npm run simulate -- temperature
 
 humidity:
-	docker compose exec mosquitto mosquitto_pub -h localhost -t iot/monitoring/esp32-01/vitals -m '{"deviceId":"esp32-01","temperature":30,"humidity":75,"temperatureAlert":false,"humidityAlert":true,"alert":true}'
+	docker compose exec -T backend npm run simulate -- humidity
 
 both:
-	docker compose exec mosquitto mosquitto_pub -h localhost -t iot/monitoring/esp32-01/vitals -m '{"deviceId":"esp32-01","temperature":40,"humidity":80,"temperatureAlert":true,"humidityAlert":true,"alert":true}'
+	docker compose exec -T backend npm run simulate -- both
 
 recovery: normal

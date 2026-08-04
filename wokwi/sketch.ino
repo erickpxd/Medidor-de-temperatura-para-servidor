@@ -19,8 +19,8 @@ constexpr char MQTT_USERNAME[] = "";
 constexpr char MQTT_PASSWORD[] = "";
 
 constexpr char DEVICE_ID[] = "esp32-01";
-constexpr char VITALS_TOPIC[] = "iot/monitoring/esp32-01/vitals";
-constexpr char STATUS_TOPIC[] = "iot/monitoring/esp32-01/status";
+constexpr char VITALS_TOPIC[] = "jala/erick-lima/capstone-iot/esp32-01/vitals";
+constexpr char STATUS_TOPIC[] = "jala/erick-lima/capstone-iot/esp32-01/status";
 
 constexpr unsigned long SENSOR_INTERVAL_MS = 5000;
 constexpr unsigned long WIFI_RETRY_INTERVAL_MS = 10000;

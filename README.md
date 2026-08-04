@@ -93,6 +93,21 @@ O broker público é compartilhado e sem TLS, portanto serve apenas para demonst
 
 ## Provocar e observar alertas
 
+Para preencher o Grafana com 72 horas de histórico realista antes da demonstração:
+
+```bash
+make seed
+```
+
+O gerador cria medições a cada cinco minutos e eventos de temperatura, umidade e ambos os limites. Ele grava diretamente no InfluxDB, portanto não envia e-mails históricos. Para personalizar a execução:
+
+```bash
+docker compose exec -T \
+  -e SEED_HOURS=168 \
+  -e SEED_INTERVAL_MINUTES=10 \
+  backend npm run seed
+```
+
 No simulador, clique no DHT22:
 
 - defina temperatura em `38` e umidade em `60` para `TEMPERATURE`;
@@ -102,9 +117,10 @@ No simulador, clique no DHT22:
 
 Espere até cinco segundos. O Serial mostra buzzer, leitura e publicação. No dashboard, selecione `esp32-01`; os gauges e históricos atualizam a cada cinco segundos, **System Status** muda de cor e **Alert Events** lista data, dispositivo, evento, motivo e valores.
 
-Sem Wokwi, os mesmos cenários podem ser publicados no broker local:
+Sem Wokwi, os mesmos cenários podem ser publicados no broker configurado:
 
 ```bash
+make simulate     # normal, espera dois segundos e alerta de temperatura
 make normal
 make temperature
 make recovery

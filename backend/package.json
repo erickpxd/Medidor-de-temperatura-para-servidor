@@ -10,8 +10,11 @@
   },
   "scripts": {
     "start": "node src/index.js",
+    "seed": "node src/scripts/seedHistory.js",
+    "simulate": "node src/scripts/simulateSensor.js",
+    "simulate-alert": "node src/scripts/simulateSensor.js demo",
     "test": "node --test",
-    "check": "node --check src/index.js"
+    "check": "node --check src/index.js && node --check src/scripts/seedHistory.js && node --check src/scripts/simulateSensor.js"
   },
   "dependencies": {
     "@influxdata/influxdb-client": "^1.35.0",
