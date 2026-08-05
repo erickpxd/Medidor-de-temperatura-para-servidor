@@ -1,6 +1,8 @@
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <DHTesp.h>
+#include <time.h>
 
 constexpr int DHT_PIN = 15;
 constexpr int BUZZER_PIN = 14;
@@ -11,12 +13,46 @@ constexpr float HUMIDITY_LIMIT = 70.0;
 constexpr char WIFI_SSID[] = "Wokwi-GUEST";
 constexpr char WIFI_PASSWORD[] = "";
 
-// Public, unencrypted broker for Wokwi demonstrations only. For production,
-// replace this configuration with a private MQTTS endpoint and WiFiClientSecure.
-constexpr char MQTT_HOST[] = "broker.hivemq.com";
-constexpr uint16_t MQTT_PORT = 1883;
-constexpr char MQTT_USERNAME[] = "";
-constexpr char MQTT_PASSWORD[] = "";
+// HiveMQ Cloud: substitua somente HOST, USERNAME e PASSWORD.
+constexpr char MQTT_HOST[] = "YOUR_CLUSTER_URL.s1.eu.hivemq.cloud";
+constexpr uint16_t MQTT_PORT = 8883;
+constexpr char MQTT_USERNAME[] = "YOUR_ESP32_USERNAME";
+constexpr char MQTT_PASSWORD[] = "YOUR_ESP32_PASSWORD";
+
+// ISRG Root X1: valida a identidade TLS do HiveMQ Cloud.
+static const char MQTT_ROOT_CA[] PROGMEM = R"CERT(
+-----BEGIN CERTIFICATE-----
+MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
+TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
+WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu
+ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY
+MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc
+h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+
+0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U
+A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW
+T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH
+B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC
+B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv
+KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn
+OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn
+jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw
+qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI
+rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV
+HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq
+hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
+ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ
+3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK
+NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5
+ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur
+TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC
+jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc
+oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq
+4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA
+mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
+emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
+-----END CERTIFICATE-----
+)CERT";
 
 constexpr char DEVICE_ID[] = "esp32-01";
 constexpr char VITALS_TOPIC[] = "jala/erick-lima/capstone-iot/esp32-01/vitals";
@@ -26,7 +62,7 @@ constexpr unsigned long SENSOR_INTERVAL_MS = 5000;
 constexpr unsigned long WIFI_RETRY_INTERVAL_MS = 10000;
 constexpr unsigned long MQTT_RETRY_INTERVAL_MS = 5000;
 
-WiFiClient networkClient;
+WiFiClientSecure networkClient;
 PubSubClient mqttClient(networkClient);
 DHTesp dht;
 
@@ -34,6 +70,7 @@ unsigned long lastSensorReading = 0;
 unsigned long lastWifiAttempt = 0;
 unsigned long lastMqttAttempt = 0;
 bool buzzerActive = false;
+bool clockSyncStarted = false;
 
 void setBuzzer(bool active) {
   if (active == buzzerActive) return;
@@ -63,6 +100,15 @@ void connectWifiIfNeeded() {
 
 void connectMqttIfNeeded() {
   if (WiFi.status() != WL_CONNECTED || mqttClient.connected()) return;
+
+  if (time(nullptr) < 1700000000) {
+    if (!clockSyncStarted) {
+      clockSyncStarted = true;
+      configTime(0, 0, "pool.ntp.org", "time.google.com");
+      Serial.println("[TLS] Synchronizing clock for certificate validation");
+    }
+    return;
+  }
 
   const unsigned long now = millis();
   if (now - lastMqttAttempt < MQTT_RETRY_INTERVAL_MS) return;
@@ -145,9 +191,11 @@ void setup() {
   dht.setup(DHT_PIN, DHTesp::DHT22);
 
   WiFi.mode(WIFI_STA);
+  networkClient.setCACert(MQTT_ROOT_CA);
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setBufferSize(512);
-  mqttClient.setSocketTimeout(2);
+  mqttClient.setSocketTimeout(10);
+  mqttClient.setKeepAlive(30);
 
   // Allow immediate connection attempts and an immediate first reading.
   lastWifiAttempt = millis() - WIFI_RETRY_INTERVAL_MS;
